@@ -1,19 +1,37 @@
-version: '3.8'
-
 services:
-  ceevee-supabase-db:
+  ceevee-db:
+    image: ceevee-db
+    container_name: ceevee-db
     build:
-      context: ./db              # Build context points to the db folder
-      dockerfile: Dockerfile     # Use Dockerfile from the db folder
-    container_name: supabase-db  # Name of the database container
+      context: ./db
+      dockerfile: Dockerfile
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: supabase
     ports:
-      - "5432:5432" # Map the database to localhost:5432
+      - "5432:5432"
     volumes:
       - db_data:/var/lib/postgresql/data # Persistent storage for database
+    healthcheck:
+      test: [ "CMD", "pg_isready", "-U", "postgres" ]
+      interval: 5s
+      retries: 5
+
+  ceevee-api:
+    image: ceevee-api
+    container_name: ceevee-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    environment:
+      DATABASE_URL: "postgresql://postgres:postgres@ceevee-db:5432/supabase"
+    ports:
+      - "4000:4000"
+    depends_on:
+      ceevee-db:
+        condition: service_healthy
+    entrypoint: ["/bin/sh", "-c", "yarn prisma migrate deploy && exec node dist/server.js"]
 
 volumes:
   db_data:
