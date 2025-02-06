@@ -5,18 +5,13 @@ services:
     build:
       context: ./db
       dockerfile: Dockerfile
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: postgres
-      POSTGRES_DB: supabase
+    env_file:
+      - path: ./db/.env
+        required: false
     ports:
       - "5432:5432"
     volumes:
-      - db_data:/var/lib/postgresql/data # Persistent storage for database
-    healthcheck:
-      test: [ "CMD", "pg_isready", "-U", "postgres" ]
-      interval: 5s
-      retries: 5
+      - db_data:/var/lib/postgresql/data
 
   ceevee-api:
     image: ceevee-api
@@ -25,9 +20,8 @@ services:
       context: ./api
       dockerfile: Dockerfile
     env_file:
-      - ./api/.env
-    environment:
-      DATABASE_URL: "postgresql://postgres:postgres@ceevee-db:5432/supabase"
+      - path: ./api/.env.docker
+        required: false
     ports:
       - "4000:4000"
     depends_on:
