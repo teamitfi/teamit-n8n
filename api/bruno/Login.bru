@@ -23,6 +23,5 @@ body:json {
 
 script:post-response {
   bru.setVar("accessToken", res.body.accessToken);
-  bru.setVar("idToken", res.body.idToken);
   bru.setVar("refreshToken", res.body.refreshToken)
 }
