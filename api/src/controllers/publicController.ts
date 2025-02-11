@@ -7,7 +7,7 @@ import {
 import jwt from 'jsonwebtoken';
 import dotenv from 'dotenv';
 import {syncUser} from '../middlewares/syncUser.js';
-import {cognitoClient} from '../config/cognito.js';
+import {cognitoClient, CognitoUser} from '../config/cognito.js';
 
 dotenv.config();
 
@@ -37,7 +37,7 @@ export const login = async (req: Request, res: Response) => {
     }
 
     // Decode the JWT to get the Cognito user data
-    const decoded = jwt.decode(authResponse.AuthenticationResult.IdToken) as any;
+    const decoded = jwt.decode(authResponse.AuthenticationResult.IdToken) as CognitoUser;
     if (!decoded || !decoded.sub) {
       return res.status(500).json({ message: 'Invalid token payload' });
     }
@@ -50,9 +50,10 @@ export const login = async (req: Request, res: Response) => {
 
     // Return the AWS Cognito JWT token
     res.json({
-      token: authResponse.AuthenticationResult.IdToken,
+      accessToken: authResponse.AuthenticationResult.AccessToken,
       refreshToken: authResponse.AuthenticationResult.RefreshToken,
       expiresIn: authResponse.AuthenticationResult.ExpiresIn,
+      user,
     });
   } catch (error: any) {
     // Handle common Cognito errors
@@ -71,7 +72,12 @@ export const login = async (req: Request, res: Response) => {
  * @desc Refreshes a JWT token using a refresh token
  */
 export const refreshToken = async (req: Request, res: Response) => {
-  const { refreshToken } = req.body;
+  const authHeader = req.headers['authorization'];
+  if (!authHeader) return res.status(401).json({ message: 'Access denied. No token provided.' });
+
+  // Ensure token does not include "Bearer " prefix
+  const refreshToken = authHeader.startsWith('Bearer ') ? authHeader.split(' ')[1] : authHeader;
+
   if (!refreshToken) return res.status(400).json({ message: 'Refresh token is required' });
 
   try {
@@ -88,8 +94,7 @@ export const refreshToken = async (req: Request, res: Response) => {
     }
 
     res.json({
-      token: authResponse.AuthenticationResult.IdToken,
-      refreshToken: authResponse.AuthenticationResult.RefreshToken, // New refresh token
+      accessToken: authResponse.AuthenticationResult.AccessToken,
       expiresIn: authResponse.AuthenticationResult.ExpiresIn,
     });
   } catch (error: any) {
