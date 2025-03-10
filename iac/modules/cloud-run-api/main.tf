@@ -1,8 +1,3 @@
-# Validate container image exists
-data "google_container_registry_image" "api" {
-  name = var.api_image
-}
-
 # Configure Cloud Run service
 resource "google_cloud_run_v2_service" "api" {
   name                = "ceevee-api-${var.environment}"
@@ -18,7 +13,14 @@ resource "google_cloud_run_v2_service" "api" {
     }
 
     containers {
-      image = data.google_container_registry_image.api.image_url
+      # Ensure format: LOCATION-docker.pkg.dev/PROJECT_ID/REPOSITORY_ID/IMAGE:TAG
+      image = format("%s-docker.pkg.dev/%s/%s/%s:%s",
+        var.region,
+        var.project_id,
+        var.repository_id,
+        var.image_name,
+        var.image_tag
+      )
 
       command = ["/bin/sh", "-c"]
       args    = ["yarn prisma migrate deploy && exec node dist/server.js"]
@@ -43,7 +45,7 @@ resource "google_cloud_run_v2_service" "api" {
         name = "DATABASE_URL"
         value_source {
           secret_key_ref {
-            secret  = var.database_url_secret
+            secret  = var.database_url_secret_id
             version = "latest"
           }
         }
@@ -179,4 +181,18 @@ resource "google_artifact_registry_repository_iam_member" "api_registry_reader" 
   repository = var.repository_id
   role       = "roles/artifactregistry.reader"
   member     = "serviceAccount:${google_service_account.api.email}"
+}
+
+# Add additional permissions for Artifact Registry
+resource "google_project_iam_member" "api_artifact_reader" {
+  project = var.project_id
+  role    = "roles/artifactregistry.reader"
+  member  = "serviceAccount:${google_service_account.api.email}"
+}
+
+# Add service agent permissions
+resource "google_project_iam_member" "api_service_agent" {
+  project = var.project_id
+  role    = "roles/run.serviceAgent"
+  member  = "serviceAccount:${google_service_account.api.email}"
 }

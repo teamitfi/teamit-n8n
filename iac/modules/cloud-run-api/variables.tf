@@ -13,8 +13,13 @@ variable "environment" {
   type        = string
 }
 
-variable "api_image" {
-  description = "Full URL of the API container image"
+variable "image_name" {
+  description = "The name of the container image, exluding the url and tag"
+  type        = string
+}
+
+variable "image_tag" {
+  description = "The tag of the container image"
   type        = string
 }
 
@@ -42,22 +47,22 @@ variable "min_scale" {
 variable "max_scale" {
   description = "Maximum number of instances"
   type        = number
-  default     = 10
+  default     = 3
 }
 
 variable "memory_limit" {
   description = "Memory limit for Cloud Run service"
   type        = string
-  default     = "2Gi" # 4 GB
+  default     = "2Gi"
 }
 
 variable "cpu_limit" {
-  description = "CPU limit for Cloud Run service"
+  description = "CPU limit for Cloud Run service in millicores"
   type        = string
-  default     = "1000m" # 2 vCPU
+  default     = "1000m"
 }
 
-variable "database_url_secret" {
+variable "database_url_secret_id" {
   description = "The Secret Manager secret ID for the database URL"
   type        = string
 }
