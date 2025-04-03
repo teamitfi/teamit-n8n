@@ -8,6 +8,14 @@ resource "google_cloud_run_v2_service" "browserless" {
   name     = "browserless-${var.environment}"
   location = var.region
 
+  lifecycle {
+    ignore_changes = [
+      template[0].containers[0].env,
+      client,
+      client_version
+    ]
+  }
+
   template {
     service_account = google_service_account.browserless.email
     containers {
@@ -28,14 +36,6 @@ resource "google_cloud_run_v2_service" "browserless" {
             version = "latest"
           }
         }
-      }
-      env {
-        name  = "CORS"
-        value = "true"
-      }
-      env {
-        name  = "DEBUG"
-        value = "*"
       }
     }
     scaling {
