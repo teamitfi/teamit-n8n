@@ -24,16 +24,6 @@ module "network" {
   environment = var.environment
 }
 
-module "registry" {
-  source = "./modules/artifact-registry"
-
-  project_id         = var.project_id
-  region             = var.region
-  environment        = var.environment
-  repository_base_id = var.repository_base_id
-  registry_writers   = var.registry_writers
-}
-
 module "database" {
   source = "./modules/cloud-sql"
 
@@ -58,23 +48,6 @@ module "n8n" {
   database_password_secret_id = module.database.n8n_password_secret_id
   depends_on                  = [module.database, module.network]
 }
-
-# module "api" {
-#   source = "./modules/cloud-run-api"
-
-#   project_id  = var.project_id
-#   region      = var.region
-#   environment = var.environment
-
-#   domain_name            = var.api_domain_name
-#   network_id             = module.network.vpc_id
-#   vpc_connector_name     = module.network.vpc_connector_name
-#   database_url_secret_id = module.database.ceevee_database_url_secret_id
-#   repository_id          = module.registry.repository_id
-#   image_name             = var.api_image_name
-#   image_tag              = var.api_image_tag
-#   depends_on             = [module.database, module.network, module.registry]
-# }
 
 module "browserless" {
   source                    = "./modules/cloud-run-browserless"

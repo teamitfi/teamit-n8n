@@ -75,23 +75,18 @@ resource "google_sql_database_instance" "instance" {
 
 # Define local variables for usernames
 locals {
-  n8n_username    = "n8n_user"
-  ceevee_username = "ceevee_user"
+  n8n_username = "n8n_user"
+  n8n_database_url = format("postgresql://%s:%s@%s:%d/%s",
+    local.n8n_username,
+    random_password.n8n_password.result,
+    google_sql_database_instance.instance.private_ip_address,
+    5432,
+    google_sql_database.n8n.name
+  )
 }
 
 resource "google_sql_database" "n8n" {
   name     = "n8n"
-  instance = google_sql_database_instance.instance.name
-
-  depends_on = [google_sql_database_instance.instance]
-
-  timeouts {
-    create = "20m"
-  }
-}
-
-resource "google_sql_database" "ceevee" {
-  name     = "ceevee"
   instance = google_sql_database_instance.instance.name
 
   depends_on = [google_sql_database_instance.instance]
@@ -108,27 +103,9 @@ resource "random_password" "n8n_password" {
   override_special = "!#$%&*()-_=+[]{}<>:?"
 }
 
-resource "random_password" "ceevee_password" {
-  length           = 32
-  special          = true
-  override_special = "!#$%&*()-_=+[]{}<>:?"
-}
-
 # Create secrets for usernames and passwords
 resource "google_secret_manager_secret" "n8n_username" {
   secret_id = "n8n_database_username_${var.environment}"
-
-  replication {
-    auto {}
-  }
-
-  labels = {
-    environment = var.environment
-  }
-}
-
-resource "google_secret_manager_secret" "ceevee_username" {
-  secret_id = "ceevee_database_username_${var.environment}"
 
   replication {
     auto {}
@@ -151,37 +128,15 @@ resource "google_secret_manager_secret" "n8n_password" {
   }
 }
 
-resource "google_secret_manager_secret" "ceevee_password" {
-  secret_id = "ceevee_database_password_${var.environment}"
-
-  replication {
-    auto {}
-  }
-
-  labels = {
-    environment = var.environment
-  }
-}
-
 # Store usernames and passwords
 resource "google_secret_manager_secret_version" "n8n_username" {
   secret         = google_secret_manager_secret.n8n_username.id
   secret_data_wo = local.n8n_username
 }
 
-resource "google_secret_manager_secret_version" "ceevee_username" {
-  secret         = google_secret_manager_secret.ceevee_username.id
-  secret_data_wo = local.ceevee_username
-}
-
 resource "google_secret_manager_secret_version" "n8n_password" {
   secret         = google_secret_manager_secret.n8n_password.id
   secret_data_wo = random_password.n8n_password.result
-}
-
-resource "google_secret_manager_secret_version" "ceevee_password" {
-  secret         = google_secret_manager_secret.ceevee_password.id
-  secret_data_wo = random_password.ceevee_password.result
 }
 
 # Create database users
@@ -198,37 +153,6 @@ resource "google_sql_user" "n8n_user" {
   ]
 }
 
-resource "google_sql_user" "ceevee_user" {
-  name            = local.ceevee_username
-  instance        = google_sql_database_instance.instance.name
-  password_wo     = random_password.ceevee_password.result
-  type            = "BUILT_IN"
-  deletion_policy = "ABANDON"
-
-  depends_on = [
-    google_sql_database_instance.instance,
-    google_sql_database.ceevee
-  ]
-}
-
-# Construct database URLs
-locals {
-  n8n_database_url = format("postgresql://%s:%s@%s:%d/%s",
-    local.n8n_username,
-    random_password.n8n_password.result,
-    google_sql_database_instance.instance.private_ip_address,
-    5432,
-    google_sql_database.n8n.name
-  )
-  ceevee_database_url = format("postgresql://%s:%s@%s:%d/%s",
-    local.ceevee_username,
-    random_password.ceevee_password.result,
-    google_sql_database_instance.instance.private_ip_address,
-    5432,
-    google_sql_database.ceevee.name
-  )
-}
-
 # Create secrets for the complete DATABASE_URLs
 resource "google_secret_manager_secret" "n8n_database_url" {
   secret_id = "n8n_database_url_${var.environment}"
@@ -242,24 +166,7 @@ resource "google_secret_manager_secret" "n8n_database_url" {
   }
 }
 
-resource "google_secret_manager_secret" "ceevee_database_url" {
-  secret_id = "ceevee_database_url_${var.environment}"
-
-  replication {
-    auto {}
-  }
-
-  labels = {
-    environment = var.environment
-  }
-}
-
 resource "google_secret_manager_secret_version" "n8n_database_url" {
   secret         = google_secret_manager_secret.n8n_database_url.id
   secret_data_wo = local.n8n_database_url
-}
-
-resource "google_secret_manager_secret_version" "ceevee_database_url" {
-  secret         = google_secret_manager_secret.ceevee_database_url.id
-  secret_data_wo = local.ceevee_database_url
 }
