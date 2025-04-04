@@ -26,46 +26,6 @@ variable "region" {
   }
 }
 
-# variable "min_scale" {
-#   description = "Minimum number of API instances"
-#   type        = number
-#   default     = 1
-#   validation {
-#     condition     = var.min_scale >= 0 && var.min_scale <= 100
-#     error_message = "Minimum scale must be between 0 and 100."
-#   }
-# }
-
-# variable "max_scale" {
-#   description = "Maximum number of API instances"
-#   type        = number
-#   default     = 10
-#   validation {
-#     condition     = var.max_scale >= 1 && var.max_scale <= 100
-#     error_message = "Maximum scale must be between 1 and 100."
-#   }
-# }
-
-# variable "memory_limit" {
-#   description = "Memory limit per API instance"
-#   type        = string
-#   default     = "1Gi"
-#   validation {
-#     condition     = can(regex("^[0-9]+(Mi|Gi)$", var.memory_limit))
-#     error_message = "Memory limit must be specified in Mi or Gi (e.g., 512Mi, 4Gi)."
-#   }
-# }
-
-# variable "cpu_limit" {
-#   description = "CPU limit per API instance"
-#   type        = string
-#   default     = "1000m"
-#   validation {
-#     condition     = can(regex("^[0-9]+m$", var.cpu_limit))
-#     error_message = "CPU limit must be specified in millicores (e.g., 1000m)."
-#   }
-# }
-
 variable "repository_base_id" {
   description = "The base ID of the Artifact Registry repository"
   type        = string
