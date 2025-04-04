@@ -26,16 +26,6 @@ jobs:
       TF_VAR_project_id: ${{ vars.PROJECT_ID }}
       TF_VAR_region: ${{ vars.REGION }}
       TF_VAR_environment: ${{ vars.ENVIRONMENT }}
-      TF_VAR_api_domain_name: ${{ vars.API_DOMAIN_NAME }}
-      TF_VAR_api_image_name: ${{ vars.API_IMAGE_NAME }}
-      TF_VAR_min_scale: ${{ vars.MIN_SCALE }}
-      TF_VAR_max_scale: ${{ vars.MAX_SCALE }}
-      TF_VAR_memory_limit: ${{ vars.MEMORY_LIMIT }}
-      TF_VAR_cpu_limit: ${{ vars.CPU_LIMIT }}
-      TF_VAR_repository_base_id: ${{ vars.REPOSITORY_BASE_ID }}
-      TF_VAR_repository_description: ${{ vars.REPOSITORY_DESCRIPTION }}
-      TF_VAR_registry_writers: ${{ vars.REGISTRY_WRITERS }}
-      TF_VAR_api_image_tag: ${{ vars.API_IMAGE_TAG }}
 
     defaults:
       run:
